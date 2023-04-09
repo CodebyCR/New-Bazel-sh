@@ -2,18 +2,18 @@
 
 _A simple bash script to generate a Bazel template project for C++._
 
-## Template Support
-
 ---
+
+## Template Support
 
 | Library      | Support |
 | :----------- | :-----: |
 | Google Test  |    -    |
 | Nlohman JSON |    -    |
 
-## Genarated files
-
 ---
+
+## Genarated files
 
 - [x] Compile ready
 - [x] Changelog.md
