@@ -1,5 +1,11 @@
 #!/bin/bash
 
+##########################################
+# All rights reserved. 
+# Copyright © 2023 - Christoph Rohde
+# https://github.com/CodebyCR/New-Bazel-sh
+##########################################
+
 # ANSI Color
 indigo='\033[0;34m'
 color_reset='\033[0m'
