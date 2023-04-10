@@ -1,6 +1,6 @@
 # New-Bazel-sh
 
-_A simple bash script to generate a Bazel template project for C++._
+_A script that generates a Bazel template project for C++._
 
 ---
 
