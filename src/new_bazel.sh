@@ -8,6 +8,8 @@
 
 # ANSI Color
 indigo='\033[0;34m'
+cyan='\033[0;36m'
+red='\033[0;30m'
 color_reset='\033[0m'
 
 
@@ -15,6 +17,25 @@ color_reset='\033[0m'
 printf "${indigo}Enter the bazel project name: ${color_reset}"
 read -r projectName
 printf "\n"
+
+# chose Project directory
+printf "${cyan}In which directory should the folder be created? (Leave blank for home directory)${color_reset}"
+read path
+
+if [ -z "$path" ]
+then
+  path=$HOME
+fi
+
+# check of valid path
+if ! [ -d "$path" ]
+then
+  printf "${red}Path dosen't exists!${color_reset}"
+  exit 1
+fi
+
+# change to chosen path
+cd $path
 
 # Create project directory and switch to it
 mkdir $projectName
@@ -66,13 +87,25 @@ touch Changelog.md
 # " >> .bazelproject
 
 
-# Initialize Git repository and make initial commit
-git init
-git add .
-git commit -m "Initial commit"
+
 
 # Create WORKSPACE file
-touch WORKSPACE.bazel
+echo "workspace(name = \"$projectName\")
+
+################################
+# **GIT REPOSITORYs**
+################################
+
+load(\"@bazel_tools//tools/build_defs/repo:git.bzl\", \"git_repository\")
+
+git_repository(
+    name = \"com_google_googletest\",
+    commit =\"1b18723e874b256c1e39378c6774a90701d70f7a\",
+    remote = \"https://github.com/google/googletest\",
+    # tag = \"release-1.13.0\",
+)
+
+" > WORKSPACE.bazel
 
 # Create BUILD.bazel file for hello-world binary
 echo '
@@ -125,20 +158,62 @@ namespace lib
         std::cout << "Hello, world!" << std::endl;
     }
 
+    auto test_function() -> std::string {
+        return "Test";
+    }
+
 }
 
 
 ' > hello.cpp
 
 echo '#pragma once
+#include <iostream>
 
 namespace lib
 {
 
     void hello();
 
+    auto test_function() -> std::string;
+
 }
 ' > hello.hpp
+
+# Return to project root directory
+cd ..
+
+# gtest
+mkdir GTest
+cd GTest
+
+# Create demo test
+echo '
+#include <gtest/gtest.h>
+#include "library/hello.hpp"
+
+TEST(HelloTest, Test) {
+    EXPECT_EQ(lib::test_function(), "Test");
+}
+
+' > hello_test.cpp
+
+# Create BUILD.bazel file for gtest
+echo '
+package(default_visibility = ["//visibility:public"])
+
+cc_test(
+    name = "lib_gtest",
+    srcs = glob(["GTest/*.cpp"]),
+    #includes = ["googletest/include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//library:hello-library",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+' > BUILD.bazel
 
 # Return to project root directory
 cd ..
@@ -147,20 +222,10 @@ cd ..
 mkdir third_party
 cd third_party
 
-# Create BUILD.bazel file for googletest
-echo '
-package(default_visibility = ["//visibility:public"])
-
-cc_library(
-    name = "googletest",
-    srcs = glob(["googletest/src/*.cc"]),
-    hdrs = glob(["googletest/include/**/*.h"]),
-    includes = ["googletest/include"],
-    visibility = ["//visibility:public"],
-)
-
-' > BUILD.bazel
-
+# Initialize Git repository and make initial commit
+git init
+git add .
+git commit -m "Initial commit"
 
 # Build everything
 bazel build //...
